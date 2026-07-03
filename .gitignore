@@ -1,0 +1,14 @@
+# This repository ships the AMBER backend service only.
+/web/
+/memory/
+/.claude/
+node_modules/
+
+# Root planning notes are not part of the shipped code.
+/*.md
+!/README.md
+
+# Assets and OS cruft
+*.png
+*.svg
+.DS_Store
