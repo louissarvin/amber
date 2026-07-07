@@ -28,6 +28,7 @@
   "devDependencies": {
     "@types/bun": "latest",
     "@types/node": "^22.10.10",
+    "bun-types": "latest",
     "typescript": "^5.7.3"
   }
 }
