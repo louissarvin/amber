@@ -93,3 +93,48 @@ export const SIGNER_MODE: SignerModeType = (process.env.SIGNER_MODE as SignerMod
 export const ASP_PRIVATE_KEY: string | undefined = process.env.ASP_PRIVATE_KEY; // SIGNER_MODE=self
 
 // OKX Agentic Wallet (TEE signer path).
+export const OKX_API_KEY: string | undefined = process.env.OKX_API_KEY;
+export const OKX_SECRET_KEY: string | undefined = process.env.OKX_SECRET_KEY;
+export const OKX_PASSPHRASE: string | undefined = process.env.OKX_PASSPHRASE;
+export const OKX_WALLET_ADDRESS: string | undefined = process.env.OKX_WALLET_ADDRESS?.toLowerCase();
+
+// OpenAI (embeddings).
+export const OPENAI_API_KEY: string = (process.env.OPENAI_API_KEY as string) || '';
+export const OPENAI_EMBEDDING_MODEL: string =
+  process.env.OPENAI_EMBEDDING_MODEL || 'text-embedding-3-small';
+export const OPENAI_EMBEDDING_DIMENSIONS: number =
+  Number(process.env.OPENAI_EMBEDDING_DIMENSIONS) || 1024;
+
+// Redis (Upstash TLS or local).
+export const REDIS_URL: string = (process.env.REDIS_URL as string) || '';
+
+// Public base URL of this backend (x402 challenge resource.url, MCP absolute URLs).
+export const PUBLIC_BASE_URL: string = (process.env.PUBLIC_BASE_URL as string) || '';
+
+// MCP transport.
+export const MCP_ALLOWED_ORIGINS: string[] = (
+  process.env.MCP_ALLOWED_ORIGINS ||
+  'https://claude.ai,https://chatgpt.com,https://cursor.sh,https://openclaw.dev,https://www.okx.ai,https://okx.ai,https://okx.com,https://oklink.com,https://web3.okx.com'
+)
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean);
+export const MCP_PROTOCOL_VERSION: string = process.env.MCP_PROTOCOL_VERSION || '2025-06-18';
+export const MCP_ALLOW_ANY_ORIGIN: boolean = process.env.MCP_ALLOW_ANY_ORIGIN === 'true'; // dev only
+
+// Quotas + pricing (all values in atomic 6-decimal USDT).
+export const FREE_TIER_WRITES_PER_IDENTITY: number =
+  Number(process.env.FREE_TIER_WRITES_PER_IDENTITY) || 100;
+export const PRICE_WRITE_ATOMIC: number = Number(process.env.PRICE_WRITE_ATOMIC) || 1000; // 0.001 USDT
+export const PRICE_QUERY_ATOMIC: number = Number(process.env.PRICE_QUERY_ATOMIC) || 500; // 0.0005 USDT
+export const PRICE_BULK_ATOMIC: number = Number(process.env.PRICE_BULK_ATOMIC) || 0; // free
+export const PRICE_SESSION_CONTEXT_ATOMIC: number =
+  Number(process.env.PRICE_SESSION_CONTEXT_ATOMIC) || 200; // 0.0002 USDT
+export const PRICE_SEAL_ATOMIC: number = Number(process.env.PRICE_SEAL_ATOMIC) || 50000; // 0.05 USDT
+export const PRICE_EXPORT_ATOMIC: number = Number(process.env.PRICE_EXPORT_ATOMIC) || 1000; // 0.001 USDT
+
+// Subscription (x402 period scheme) budget ceiling in atomic USDT.
+export const SUBSCRIPTION_MAX_BUDGET_ATOMIC: number =
+  Number(process.env.SUBSCRIPTION_MAX_BUDGET_ATOMIC) || 100000000; // 100 USDT
+
+// Rate limits (per identity per endpoint per minute).
