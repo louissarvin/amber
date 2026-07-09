@@ -66,3 +66,39 @@ model ErrorLog {
 //   2. `bun run db:push`
 //   3. Run the CONCURRENTLY index statements from bootstrap.sql
 // -----------------------------------------------------------------------------
+
+enum MemoryCategory {
+  preference
+  fact
+  event
+  relationship
+  task
+  note
+  system
+}
+
+enum AttestationStatus {
+  pending
+  submitted
+  attested
+  failed
+}
+
+enum SignerMode {
+  tee
+  self
+}
+
+enum SubscriptionStatus {
+  open
+  expired
+  closed
+  revoked
+}
+
+enum SealSigilStyle {
+  amber
+  onyx
+  cream
+}
+
