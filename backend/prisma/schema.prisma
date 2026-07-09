@@ -1,0 +1,68 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider        = "prisma-client-js"
+  output          = "./generated"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  extensions = [vector, pgcrypto]
+}
+
+model User {
+  id            String    @id @default(cuid())
+  walletAddress String    @unique
+  nonce         String? // For signature verification
+  lastSignIn    DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model ErrorLog {
+  id         String   @id @default(cuid())
+  errorCode  String
+  message    String
+  statusCode Int
+  stack      String?  @db.Text
+  context    String?  @db.Text
+  userId     String?
+  method     String?
+  path       String?
+  userAgent  String?  @db.Text
+  ip         String?
+  createdAt  DateTime @default(now())
+
+  @@index([errorCode])
+  @@index([createdAt])
+}
+
+// -----------------------------------------------------------------------------
+// AMBER models
+// -----------------------------------------------------------------------------
+//
+// MANUAL SQL — must run once against the database BEFORE `bun run db:push`.
+// See prisma/bootstrap.sql for the full statements. Quick reference:
+//
+//   -- UP (before db:push)
+//   CREATE EXTENSION IF NOT EXISTS vector;
+//   CREATE EXTENSION IF NOT EXISTS pgcrypto;
+//
+//   -- AFTER db:push:
+//   CREATE INDEX CONCURRENTLY IF NOT EXISTS "memory_embedding_ivfflat_idx"
+//     ON "Memory" USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
+//   CREATE INDEX CONCURRENTLY IF NOT EXISTS "memory_active_identity_created_idx"
+//     ON "Memory" ("identityId", "createdAt" DESC) WHERE "deletedAt" IS NULL;
+//
+//   -- DOWN (reversal)
+//   DROP INDEX CONCURRENTLY IF EXISTS "memory_active_identity_created_idx";
+//   DROP INDEX CONCURRENTLY IF EXISTS "memory_embedding_ivfflat_idx";
+//   DROP EXTENSION IF EXISTS vector;
+//
+// USER WORKFLOW:
+//   1. Run prisma/bootstrap.sql via psql on your Postgres (Neon SQL editor works).
+//   2. `bun run db:push`
+//   3. Run the CONCURRENTLY index statements from bootstrap.sql
+// -----------------------------------------------------------------------------
