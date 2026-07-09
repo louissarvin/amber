@@ -233,3 +233,79 @@ model PaymentNonce {
   @@index([expiresAt])
 }
 
+model PaymentReceipt {
+  id         String   @id @default(cuid())
+  identityId String
+  identity   Identity @relation(fields: [identityId], references: [id], onDelete: Restrict)
+
+  endpoint       String
+  scheme         String
+  amountAtomic   BigInt
+  payer          String
+  nonce          Bytes?    @unique
+  authorization  Json
+  signature      String
+  chainId        Int       @default(196)
+  txHash         String?   @unique
+  memoryId       String?
+  settledAt      DateTime?
+  // Maximize Sprint 2026-07-14 — on-chain settler bookkeeping.
+  // -- UP: `db:push` adds nullable columns `settleAttempts INT DEFAULT 0`,
+  //         `settleError TEXT`, `chainId INT DEFAULT 196`.
+  // -- DOWN: `ALTER TABLE "PaymentReceipt" DROP COLUMN "settleAttempts",
+  //         DROP COLUMN "settleError", DROP COLUMN "chainId";`
+  settleAttempts Int       @default(0)
+  settleError    String?   @db.Text
+
+  // Continuation Sprint 2026-07-14 — track how a receipt was authorized.
+  // "exact" = classic EIP-3009 per-request; "period" = x402 subscription
+  // debit (no on-chain settle needed); "free" = free-tier bookkeeping row.
+  // -- UP: `db:push` adds `mode TEXT DEFAULT 'exact'`, `subscriptionId TEXT`.
+  // -- DOWN: `ALTER TABLE "PaymentReceipt" DROP COLUMN "mode",
+  //          DROP COLUMN "subscriptionId";`
+  mode           String  @default("exact")
+  subscriptionId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([identityId, createdAt])
+  @@index([payer])
+  @@index([txHash])
+  @@index([settledAt, settleAttempts])
+  @@index([subscriptionId])
+}
+
+// -----------------------------------------------------------------------------
+// Maximize Sprint 2026-07-14 — Subscription (x402 `period` scheme)
+// -- UP: new tables created by `bun run db:push`.
+// -- DOWN: DROP TABLE "Subscription"; DROP TYPE "SubscriptionStatus";
+// -----------------------------------------------------------------------------
+model Subscription {
+  id         String   @id @default(cuid())
+  identityId String
+  identity   Identity @relation(fields: [identityId], references: [id], onDelete: Restrict)
+
+  permit2Nonce  Bytes              @unique // 32 bytes
+  budgetAtomic  BigInt
+  spentAtomic   BigInt             @default(0)
+  periodSeconds Int
+  status        SubscriptionStatus @default(open)
+
+  openedAt  DateTime  @default(now())
+  expiresAt DateTime
+  closedAt  DateTime?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([identityId, status])
+  @@index([expiresAt])
+}
+
+// -----------------------------------------------------------------------------
+// Maximize Sprint 2026-07-14 — Seal (SEALSCRIBE-lite output)
+// -- UP: new table created by `bun run db:push`.
+// -- DOWN: DROP TABLE "Seal"; DROP TYPE "SealSigilStyle";
+// -----------------------------------------------------------------------------
