@@ -31,6 +31,7 @@
   "devDependencies": {
     "@types/bun": "latest",
     "@types/node": "^22.10.10",
+    "@types/pg": "^8.11.0",
     "@typescript-eslint/eslint-plugin": "^8.64.0",
     "@typescript-eslint/parser": "^8.64.0",
     "bun-types": "latest",
