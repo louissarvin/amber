@@ -309,3 +309,41 @@ model Subscription {
 // -- UP: new table created by `bun run db:push`.
 // -- DOWN: DROP TABLE "Seal"; DROP TYPE "SealSigilStyle";
 // -----------------------------------------------------------------------------
+model Seal {
+  id         String   @id @default(cuid())
+  identityId String
+  identity   Identity @relation(fields: [identityId], references: [id], onDelete: Restrict)
+
+  subject       String
+  decreeText    String         @db.Text
+  sigilStyle    SealSigilStyle @default(amber)
+  svgPath       String
+  pngPath       String?
+  attestationId String?
+  attestation   Attestation?   @relation(fields: [attestationId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([identityId, createdAt])
+  @@index([attestationId])
+}
+
+model McpSession {
+  id         String    @id
+  identityId String?
+  identity   Identity? @relation(fields: [identityId], references: [id], onDelete: SetNull)
+
+  origin          String
+  protocolVersion String
+  clientName      String?
+  clientVersion   String?
+  expiresAt       DateTime
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([identityId])
+  @@index([expiresAt])
+}
