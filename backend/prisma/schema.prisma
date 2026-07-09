@@ -102,3 +102,51 @@ enum SealSigilStyle {
   cream
 }
 
+model Identity {
+  id         String    @id @default(cuid())
+  address    String    @unique // lowercased 0x + 40 hex, ERC-8004 address
+  agentId    String?
+  reputation Int?
+  resolvedAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  memories        Memory[]
+  quota           Quota?
+  paymentReceipts PaymentReceipt[]
+  attestations    Attestation[]
+  mcpSessions     McpSession[]
+  subscriptions   Subscription[]
+  seals           Seal[]
+
+  @@index([address])
+  @@index([agentId])
+}
+
+model Memory {
+  id         String   @id @default(cuid())
+  identityId String
+  identity   Identity @relation(fields: [identityId], references: [id], onDelete: Restrict)
+
+  content     String         @db.Text
+  contentHash Bytes
+  category    MemoryCategory @default(note)
+  tags        String[]       @default([])
+  metadata    Json           @default("{}")
+  clientNonce String?
+
+  embedding Unsupported("vector(1024)")?
+
+  attestationId String?
+  attestation   Attestation? @relation(fields: [attestationId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@unique([identityId, clientNonce], name: "identity_client_nonce_unique")
+  @@index([identityId, createdAt])
+  @@index([identityId, category])
+  @@index([attestationId])
+}
+
