@@ -150,3 +150,86 @@ model Memory {
   @@index([attestationId])
 }
 
+model Attestation {
+  id         String   @id @default(cuid())
+  identityId String
+  identity   Identity @relation(fields: [identityId], references: [id], onDelete: Restrict)
+
+  merkleRoot    Bytes
+  status        AttestationStatus @default(pending)
+  signerMode    SignerMode        @default(tee)
+  signerAddress String?
+  txHash        String?           @unique
+  // Records the last broadcast tx hash even if tx.wait() timed out. Enables
+  // attestationRetry to check the receipt on-chain before resubmitting.
+  // -- UP: `db:push` will add nullable column `lastTxHash TEXT`.
+  // -- DOWN: `ALTER TABLE "Attestation" DROP COLUMN "lastTxHash";`
+  lastTxHash    String?
+  chainId       Int               @default(196)
+  retries       Int               @default(0)
+  lastError     String?           @db.Text
+
+  submittedAt DateTime?
+  attestedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  memories Memory[]
+  leaves   AttestationLeaf[]
+  seals    Seal[]
+
+  @@index([status, createdAt])
+  @@index([identityId])
+  @@index([merkleRoot])
+}
+
+model AttestationLeaf {
+  id            String      @id @default(cuid())
+  attestationId String
+  attestation   Attestation @relation(fields: [attestationId], references: [id], onDelete: Cascade)
+
+  memoryId  String
+  leafHash  Bytes
+  position  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([attestationId, position])
+  @@index([memoryId])
+}
+
+model Quota {
+  id         String   @id @default(cuid())
+  identityId String   @unique
+  identity   Identity @relation(fields: [identityId], references: [id], onDelete: Restrict)
+
+  freeUsed        Int    @default(0)
+  paidWrites      BigInt @default(0)
+  paidQueries     BigInt @default(0)
+  totalPaidAtomic BigInt @default(0)
+
+  subscriptionId           String?
+  subscriptionExpiresAt    DateTime?
+  subscriptionBudgetAtomic BigInt?
+  subscriptionSpentAtomic  BigInt?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([identityId])
+}
+
+model PaymentNonce {
+  id          String   @id @default(cuid())
+  nonce       Bytes    @unique
+  fromAddress String
+  chainId     Int      @default(196)
+  usedAt      DateTime @default(now())
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([fromAddress])
+  @@index([expiresAt])
+}
+
