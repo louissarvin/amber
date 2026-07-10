@@ -163,3 +163,38 @@ export const APP_ACCESS_HMAC_SECRET: string =
 export const ASP_CONTACT_EMAIL: string | undefined = process.env.ASP_CONTACT_EMAIL;
 export const ASP_AGENT_ID: string | null = process.env.ASP_AGENT_ID || null;
 
+// -----------------------------------------------------------------------------
+// Startup validation
+// -----------------------------------------------------------------------------
+const amberRequired: string[] = [
+  'OPENAI_API_KEY',
+  'XLAYER_RPC',
+  'USDT_XLAYER_ADDRESS',
+  'ASP_WALLET_ADDRESS',
+  'REDIS_URL',
+  'ATTESTATION_CONTRACT_ADDRESS',
+  'PUBLIC_BASE_URL',
+];
+
+export const validateConfig = (): void => {
+  const missing = amberRequired.filter((name) => !process.env[name]);
+
+  if (missing.length > 0) {
+    const message = `Missing required env: ${missing.join(', ')}`;
+    if (IS_PROD) {
+      console.error(`FATAL: ${message}`);
+      process.exit(1);
+    }
+    console.warn(`[config] ${message} (non-fatal in development)`);
+  }
+
+  if (SIGNER_MODE === 'self' && !process.env.ASP_PRIVATE_KEY) {
+    console.error('FATAL: SIGNER_MODE=self but ASP_PRIVATE_KEY is missing');
+    if (IS_PROD) process.exit(1);
+  }
+
+  if (SIGNER_MODE === 'tee' && IS_PROD && (!OKX_API_KEY || !OKX_SECRET_KEY || !OKX_PASSPHRASE)) {
+    console.error('FATAL: SIGNER_MODE=tee but OKX_API_KEY/SECRET/PASSPHRASE missing');
+    process.exit(1);
+  }
+};
