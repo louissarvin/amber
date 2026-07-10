@@ -138,3 +138,28 @@ export const SUBSCRIPTION_MAX_BUDGET_ATOMIC: number =
   Number(process.env.SUBSCRIPTION_MAX_BUDGET_ATOMIC) || 100000000; // 100 USDT
 
 // Rate limits (per identity per endpoint per minute).
+export const RATE_LIMIT_PER_MIN: number = Number(process.env.RATE_LIMIT_PER_MIN) || 60;
+export const RATE_LIMIT_BULK_PER_MIN: number = Number(process.env.RATE_LIMIT_BULK_PER_MIN) || 5;
+
+// Attestation batcher.
+export const ATTESTATION_BATCH_SIZE: number = Number(process.env.ATTESTATION_BATCH_SIZE) || 32;
+export const ATTESTATION_INTERVAL_SECONDS: number =
+  Number(process.env.ATTESTATION_INTERVAL_SECONDS) || 15;
+export const ATTESTATION_MAX_RETRIES: number = Number(process.env.ATTESTATION_MAX_RETRIES) || 3;
+
+// Local asset directory (SEALSCRIBE svgs, portrait renders).
+export const ASSETS_DIR: string = process.env.ASSETS_DIR || path.join(process.cwd(), 'assets');
+
+// PAYMENT_DEBUG=true logs the raw base64 payment header for diagnostics.
+export const PAYMENT_DEBUG: boolean = process.env.PAYMENT_DEBUG === 'true';
+
+// x402 `period` (subscription) scheme is a stretch surface, off by default.
+export const X402_ENABLE_PERIOD: boolean = process.env.X402_ENABLE_PERIOD === 'true';
+// HMAC key for period appAccessToken values. Falls back to JWT_SECRET.
+export const APP_ACCESS_HMAC_SECRET: string =
+  process.env.APP_ACCESS_HMAC_SECRET || JWT_SECRET;
+
+// Optional metadata advertised on discovery surfaces.
+export const ASP_CONTACT_EMAIL: string | undefined = process.env.ASP_CONTACT_EMAIL;
+export const ASP_AGENT_ID: string | null = process.env.ASP_AGENT_ID || null;
+
