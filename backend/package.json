@@ -35,6 +35,7 @@
   },
   "devDependencies": {
     "@types/bun": "latest",
+    "@types/jsonwebtoken": "^9.0.7",
     "@types/node": "^22.10.10",
     "@types/pg": "^8.11.0",
     "@typescript-eslint/eslint-plugin": "^8.64.0",
