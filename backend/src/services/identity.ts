@@ -22,3 +22,50 @@ const normalize = (addr: string): string => {
   }
   return addr.toLowerCase();
 };
+
+export const getOrCreateIdentity = async (address: string): Promise<IdentityRow> => {
+  const addr = normalize(address);
+
+  const existing = await prismaQuery.identity.findUnique({ where: { address: addr } });
+  if (existing) {
+    return {
+      id: existing.id,
+      address: existing.address,
+      agentId: existing.agentId,
+      reputation: existing.reputation,
+    };
+  }
+
+  // First sighting — trigger a best-effort registry read (non-blocking on the
+  // hot path when it fails; when REQUIRE_ERC8004_REGISTERED=true we do reject).
+  let agentId: string | null = null;
+  let reputation: number | null = null;
+  try {
+    const res = await resolveErc8004(addr);
+    agentId = res.agentId;
+    reputation = res.reputation;
+  } catch (err) {
+    console.warn('[identity] erc8004 resolve threw:', (err as Error).message);
+  }
+
+  if (REQUIRE_ERC8004_REGISTERED && !agentId) {
+    throw new Error(`ERC-8004 registration required but ${addr} is not registered`);
+  }
+
+  const created = await prismaQuery.identity.upsert({
+    where: { address: addr },
+    update: {},
+    create: {
+      address: addr,
+      agentId,
+      reputation,
+      resolvedAt: agentId ? new Date() : null,
+    },
+  });
+  return {
+    id: created.id,
+    address: created.address,
+    agentId: created.agentId,
+    reputation: created.reputation,
+  };
+};
