@@ -36,3 +36,79 @@ export const getIdentityStats = async (address: string): Promise<IdentityStats> 
     select: {
       id: true,
       address: true,
+      agentId: true,
+      createdAt: true,
+      quota: {
+        select: {
+          freeUsed: true,
+          paidWrites: true,
+        },
+      },
+    },
+  });
+
+  if (!identity) {
+    const err = new Error('identity not registered') as Error & { code: string };
+    err.code = 'IDENTITY_NOT_REGISTERED';
+    throw err;
+  }
+
+  const [memoryCount, attestedCount, sealCount, firstMemory, lastMemory] = await Promise.all([
+    prismaQuery.memory.count({
+      where: { identityId: identity.id, deletedAt: null },
+    }),
+    prismaQuery.memory.count({
+      where: {
+        identityId: identity.id,
+        deletedAt: null,
+        attestationId: { not: null },
+        attestation: { is: { status: 'attested' } },
+      },
+    }),
+    prismaQuery.seal.count({
+      where: { identityId: identity.id, deletedAt: null },
+    }),
+    prismaQuery.memory.findFirst({
+      where: { identityId: identity.id, deletedAt: null },
+      orderBy: { createdAt: 'asc' },
+      select: { createdAt: true },
+    }),
+    prismaQuery.memory.findFirst({
+      where: { identityId: identity.id, deletedAt: null },
+      orderBy: { createdAt: 'desc' },
+      select: { createdAt: true },
+    }),
+  ]);
+
+  // "Not registered on AMBER" is defined as: no writes ever landed. The
+  // Identity row can exist as a side effect of a bad request; hide those.
+  if (memoryCount === 0) {
+    const err = new Error('identity not registered') as Error & { code: string };
+    err.code = 'IDENTITY_NOT_REGISTERED';
+    throw err;
+  }
+
+  const firstSeenAt = firstMemory?.createdAt ?? identity.createdAt;
+  const lastActiveAt = lastMemory?.createdAt ?? null;
+  const attestationRate =
+    memoryCount > 0 ? `${Math.round((attestedCount / memoryCount) * 100)}%` : '0%';
+  const addrLower = identity.address;
+
+  return {
+    address: addrLower,
+    erc8004AgentId: identity.agentId,
+    memoryCount,
+    attestedCount,
+    attestationRate,
+    sealCount,
+    freeWrites: identity.quota?.freeUsed ?? 0,
+    paidWrites: (identity.quota?.paidWrites ?? 0n).toString(),
+    firstSeenAt: firstSeenAt ? firstSeenAt.toISOString() : null,
+    lastActiveAt: lastActiveAt ? lastActiveAt.toISOString() : null,
+    links: {
+      portrait: `${PUBLIC_BASE_URL}/portrait/${addrLower}.svg`,
+      analytics: `${PUBLIC_BASE_URL}/analytics/${addrLower}`,
+      graph: `${PUBLIC_BASE_URL}/graph/${addrLower}`,
+    },
+  };
+};
