@@ -16,3 +16,38 @@ export interface AttestationRef {
 
 export const pendingAttestationRef = (): AttestationRef => ({
   chainId: 196,
+  txHash: null,
+  merkleRoot: null,
+  status: 'pending',
+  attestedAt: null,
+});
+
+export const attestationRefFromMemoryId = async (
+  memoryId: string
+): Promise<AttestationRef> => {
+  const memory = await prismaQuery.memory.findUnique({
+    where: { id: memoryId },
+    select: {
+      attestation: {
+        select: {
+          chainId: true,
+          txHash: true,
+          merkleRoot: true,
+          status: true,
+          attestedAt: true,
+        },
+      },
+    },
+  });
+
+  if (!memory?.attestation) return pendingAttestationRef();
+
+  const a = memory.attestation;
+  return {
+    chainId: a.chainId,
+    txHash: a.txHash,
+    merkleRoot: a.merkleRoot ? `0x${Buffer.from(a.merkleRoot).toString('hex')}` : null,
+    status: a.status,
+    attestedAt: a.attestedAt ? a.attestedAt.toISOString() : null,
+  };
+};
