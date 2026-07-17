@@ -55,3 +55,116 @@ export const renderSealSvg = (input: {
   decreeText: string;
   sigilStyle: SigilStyle;
   identity: string;
+  sealId: string;
+}): string => {
+  const colors = STYLE_FILL[input.sigilStyle];
+  const subject = escapeXml(input.subject.slice(0, 80));
+  const bodyLines = wrapLines(input.decreeText, 42, 8).map(escapeXml);
+  const shortId = escapeXml(input.identity.slice(0, 10) + '…' + input.identity.slice(-4));
+  const bodyTspans = bodyLines
+    .map(
+      (line, i) =>
+        `<tspan x="400" dy="${i === 0 ? 0 : 28}">${line}</tspan>`
+    )
+    .join('');
+
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="1000" viewBox="0 0 800 1000">
+  <rect width="800" height="1000" fill="${colors.ink}"/>
+  <rect x="40" y="40" width="720" height="920" fill="none" stroke="${colors.wax}" stroke-width="3"/>
+  <rect x="56" y="56" width="688" height="888" fill="none" stroke="${colors.wax}" stroke-width="1" opacity="0.5"/>
+  <text x="400" y="120" text-anchor="middle" font-family="Georgia, serif" font-size="28" letter-spacing="6" fill="${colors.wax}">AMBER DECREE</text>
+  <text x="400" y="180" text-anchor="middle" font-family="Georgia, serif" font-size="36" font-weight="600" fill="${colors.cream}">${subject}</text>
+  <line x1="200" y1="210" x2="600" y2="210" stroke="${colors.wax}" stroke-width="1" opacity="0.6"/>
+  <text x="400" y="280" text-anchor="middle" font-family="Georgia, serif" font-size="20" fill="${colors.cream}" opacity="0.9">${bodyTspans}</text>
+  <circle cx="400" cy="780" r="90" fill="${colors.wax}" opacity="0.95"/>
+  <circle cx="400" cy="780" r="72" fill="none" stroke="${colors.ink}" stroke-width="3"/>
+  <text x="400" y="788" text-anchor="middle" font-family="Inter, Helvetica, sans-serif" font-size="22" font-weight="500" letter-spacing="4" fill="${colors.ink}">AMBER</text>
+  <text x="400" y="900" text-anchor="middle" font-family="ui-monospace, monospace" font-size="14" fill="${colors.cream}" opacity="0.45">${shortId}</text>
+  <text x="400" y="930" text-anchor="middle" font-family="ui-monospace, monospace" font-size="12" fill="${colors.wax}" opacity="0.5">${escapeXml(input.sealId)}</text>
+</svg>`;
+};
+
+export interface GenerateSealInput {
+  identityAddress: string;
+  subject: string;
+  decreeText: string;
+  sigilStyle?: SigilStyle;
+}
+
+export interface GenerateSealResult {
+  sealId: string;
+  subject: string;
+  sigilStyle: SigilStyle;
+  svgUrl: string;
+  svgPath: string;
+  createdAt: string;
+}
+
+export const generateSeal = async (input: GenerateSealInput): Promise<GenerateSealResult> => {
+  const identity = await getOrCreateIdentity(input.identityAddress);
+  const sigilStyle: SigilStyle = input.sigilStyle ?? 'amber';
+  const subject = input.subject.trim().slice(0, 120);
+  const decreeText = input.decreeText.trim().slice(0, 2000);
+  if (!subject || !decreeText) {
+    const err = new Error('subject and decreeText are required') as Error & { code: string };
+    err.code = 'BAD_INPUT';
+    throw err;
+  }
+
+  const sealId = crypto.randomUUID().replace(/-/g, '').slice(0, 24);
+  const relDir = path.join('seals', identity.address.slice(2, 10));
+  const absDir = path.join(ASSETS_DIR, relDir);
+  await fs.mkdir(absDir, { recursive: true });
+  const fileName = `${sealId}.svg`;
+  const absPath = path.join(absDir, fileName);
+  const relPath = path.join(relDir, fileName);
+
+  const svg = renderSealSvg({
+    subject,
+    decreeText,
+    sigilStyle,
+    identity: identity.address,
+    sealId,
+  });
+  await fs.writeFile(absPath, svg, 'utf8');
+
+  const row = await prismaQuery.seal.create({
+    data: {
+      id: sealId,
+      identityId: identity.id,
+      subject,
+      decreeText,
+      sigilStyle,
+      svgPath: relPath,
+      pngPath: null,
+    },
+  });
+
+  return {
+    sealId: row.id,
+    subject: row.subject,
+    sigilStyle,
+    svgUrl: `${PUBLIC_BASE_URL}/seal/${row.id}.svg`,
+    svgPath: row.svgPath,
+    createdAt: row.createdAt.toISOString(),
+  };
+};
+
+export const getSealById = async (sealId: string) => {
+  return prismaQuery.seal.findFirst({
+    where: { id: sealId, deletedAt: null },
+    include: { identity: { select: { address: true } } },
+  });
+};
+
+export const readSealSvg = async (sealId: string): Promise<string | null> => {
+  const seal = await getSealById(sealId);
+  if (!seal) return null;
+  const abs = path.join(ASSETS_DIR, seal.svgPath);
+  try {
+    return await fs.readFile(abs, 'utf8');
+  } catch {
+    return null;
+  }
+};
