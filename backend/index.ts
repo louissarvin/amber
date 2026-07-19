@@ -7,6 +7,7 @@ import FastifyRateLimit from '@fastify/rate-limit';
 import { APP_PORT, IS_DEV } from './src/config/main-config.ts';
 import { redis } from './src/lib/redis.ts';
 import { healthRoutes } from './src/routes/healthRoutes.ts';
+import { memoryRoutes } from './src/routes/memoryRoutes.ts';
 
 const fastify = Fastify({ logger: { level: IS_DEV ? 'debug' : 'info' } });
 
@@ -17,6 +18,7 @@ fastify.register(FastifyRateLimit, { global: true, max: 200, timeWindow: '1 minu
 fastify.get('/', async () => ({ success: true, message: 'AMBER backend online', error: null, data: null }));
 
 fastify.register(healthRoutes);
+fastify.register(memoryRoutes, { prefix: '/memory' });
 
 const start = async (): Promise<void> => {
   try {
