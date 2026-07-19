@@ -1,12 +1,22 @@
 import './dotenv.ts';
 
 import Fastify from 'fastify';
+import FastifyCors from '@fastify/cors';
+import FastifyHelmet from '@fastify/helmet';
+import FastifyRateLimit from '@fastify/rate-limit';
 import { APP_PORT, IS_DEV } from './src/config/main-config.ts';
+import { redis } from './src/lib/redis.ts';
+import { healthRoutes } from './src/routes/healthRoutes.ts';
 
 const fastify = Fastify({ logger: { level: IS_DEV ? 'debug' : 'info' } });
 
+fastify.register(FastifyHelmet, { contentSecurityPolicy: false });
+fastify.register(FastifyCors, { origin: '*' });
+fastify.register(FastifyRateLimit, { global: true, max: 200, timeWindow: '1 minute', redis });
+
 fastify.get('/', async () => ({ success: true, message: 'AMBER backend online', error: null, data: null }));
 
+fastify.register(healthRoutes);
 
 const start = async (): Promise<void> => {
   try {
