@@ -12,6 +12,7 @@ import { mcpRoutes } from './src/routes/mcpTransport.ts';
 import { adminRoutes } from './src/routes/adminRoutes.ts';
 import { attestationRoutes } from './src/routes/attestationRoutes.ts';
 import { identityRoutes } from './src/routes/identityRoutes.ts';
+import { subscriptionRoutes } from './src/routes/subscriptionRoutes.ts';
 
 const fastify = Fastify({ logger: { level: IS_DEV ? 'debug' : 'info' } });
 
@@ -27,6 +28,7 @@ fastify.register(mcpRoutes, { prefix: '/mcp' });
 fastify.register(adminRoutes, { prefix: '/admin' });
 fastify.register(attestationRoutes, { prefix: '/attestation' });
 fastify.register(identityRoutes, { prefix: '/identity' });
+fastify.register(subscriptionRoutes, { prefix: '/subscription' });
 
 const start = async (): Promise<void> => {
   try {
