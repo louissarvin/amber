@@ -11,6 +11,7 @@ import { memoryRoutes } from './src/routes/memoryRoutes.ts';
 import { mcpRoutes } from './src/routes/mcpTransport.ts';
 import { adminRoutes } from './src/routes/adminRoutes.ts';
 import { attestationRoutes } from './src/routes/attestationRoutes.ts';
+import { identityRoutes } from './src/routes/identityRoutes.ts';
 
 const fastify = Fastify({ logger: { level: IS_DEV ? 'debug' : 'info' } });
 
@@ -25,6 +26,7 @@ fastify.register(memoryRoutes, { prefix: '/memory' });
 fastify.register(mcpRoutes, { prefix: '/mcp' });
 fastify.register(adminRoutes, { prefix: '/admin' });
 fastify.register(attestationRoutes, { prefix: '/attestation' });
+fastify.register(identityRoutes, { prefix: '/identity' });
 
 const start = async (): Promise<void> => {
   try {
