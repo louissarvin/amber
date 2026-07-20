@@ -9,6 +9,7 @@ import { redis } from './src/lib/redis.ts';
 import { healthRoutes } from './src/routes/healthRoutes.ts';
 import { memoryRoutes } from './src/routes/memoryRoutes.ts';
 import { mcpRoutes } from './src/routes/mcpTransport.ts';
+import { adminRoutes } from './src/routes/adminRoutes.ts';
 
 const fastify = Fastify({ logger: { level: IS_DEV ? 'debug' : 'info' } });
 
@@ -21,6 +22,7 @@ fastify.get('/', async () => ({ success: true, message: 'AMBER backend online', 
 fastify.register(healthRoutes);
 fastify.register(memoryRoutes, { prefix: '/memory' });
 fastify.register(mcpRoutes, { prefix: '/mcp' });
+fastify.register(adminRoutes, { prefix: '/admin' });
 
 const start = async (): Promise<void> => {
   try {
