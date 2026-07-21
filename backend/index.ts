@@ -18,6 +18,7 @@ import { sealRoutes } from './src/routes/sealRoutes.ts';
 import { portraitRoutes } from './src/routes/portraitRoutes.ts';
 import { socialRoutes } from './src/routes/socialRoutes.ts';
 import { discoveryRoutes } from './src/routes/discoveryRoutes.ts';
+import { agentMetaRoutes } from './src/routes/agentMetaRoutes.ts';
 
 const fastify = Fastify({ logger: { level: IS_DEV ? 'debug' : 'info' } });
 
@@ -39,6 +40,7 @@ fastify.register(sealRoutes, { prefix: '/seal' });
 fastify.register(portraitRoutes, { prefix: '/portrait' });
 fastify.register(socialRoutes, { prefix: '/social' });
 fastify.register(discoveryRoutes);
+fastify.register(agentMetaRoutes);
 
 const start = async (): Promise<void> => {
   try {
