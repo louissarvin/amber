@@ -15,6 +15,7 @@ import { identityRoutes } from './src/routes/identityRoutes.ts';
 import { subscriptionRoutes } from './src/routes/subscriptionRoutes.ts';
 import { reportRoutes } from './src/routes/reportRoutes.ts';
 import { sealRoutes } from './src/routes/sealRoutes.ts';
+import { portraitRoutes } from './src/routes/portraitRoutes.ts';
 
 const fastify = Fastify({ logger: { level: IS_DEV ? 'debug' : 'info' } });
 
@@ -33,6 +34,7 @@ fastify.register(identityRoutes, { prefix: '/identity' });
 fastify.register(subscriptionRoutes, { prefix: '/subscription' });
 fastify.register(reportRoutes, { prefix: '/report' });
 fastify.register(sealRoutes, { prefix: '/seal' });
+fastify.register(portraitRoutes, { prefix: '/portrait' });
 
 const start = async (): Promise<void> => {
   try {
