@@ -22,6 +22,7 @@ import { agentMetaRoutes } from './src/routes/agentMetaRoutes.ts';
 import { analyticsRoutes } from './src/routes/analyticsRoutes.ts';
 import { graphRoutes } from './src/routes/graphRoutes.ts';
 import { publicRoutes } from './src/routes/publicRoutes.ts';
+import { demoRoutes } from './src/routes/demoRoutes.ts';
 
 const fastify = Fastify({ logger: { level: IS_DEV ? 'debug' : 'info' } });
 
@@ -47,6 +48,7 @@ fastify.register(agentMetaRoutes);
 fastify.register(analyticsRoutes, { prefix: '/analytics' });
 fastify.register(graphRoutes, { prefix: '/graph' });
 fastify.register(publicRoutes, { prefix: '/public' });
+fastify.register(demoRoutes, { prefix: '/demo' });
 
 const start = async (): Promise<void> => {
   try {
