@@ -25,6 +25,7 @@ import { publicRoutes } from './src/routes/publicRoutes.ts';
 import { demoRoutes } from './src/routes/demoRoutes.ts';
 import { startErrorLogCleanupWorker } from './src/workers/errorLogCleanup.ts';
 import { startAttestationBatcher } from './src/workers/attestationBatcher.ts';
+import { startAttestationRetry } from './src/workers/attestationRetry.ts';
 
 const fastify = Fastify({ logger: { level: IS_DEV ? 'debug' : 'info' } });
 
@@ -56,6 +57,7 @@ const start = async (): Promise<void> => {
   try {
     startErrorLogCleanupWorker();
     startAttestationBatcher();
+    startAttestationRetry();
     await fastify.listen({ port: APP_PORT, host: '0.0.0.0' });
     console.log(`Server started on port ${APP_PORT}`);
   } catch (error) {
