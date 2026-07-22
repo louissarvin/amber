@@ -23,6 +23,7 @@ import { analyticsRoutes } from './src/routes/analyticsRoutes.ts';
 import { graphRoutes } from './src/routes/graphRoutes.ts';
 import { publicRoutes } from './src/routes/publicRoutes.ts';
 import { demoRoutes } from './src/routes/demoRoutes.ts';
+import { startErrorLogCleanupWorker } from './src/workers/errorLogCleanup.ts';
 
 const fastify = Fastify({ logger: { level: IS_DEV ? 'debug' : 'info' } });
 
@@ -52,6 +53,7 @@ fastify.register(demoRoutes, { prefix: '/demo' });
 
 const start = async (): Promise<void> => {
   try {
+    startErrorLogCleanupWorker();
     await fastify.listen({ port: APP_PORT, host: '0.0.0.0' });
     console.log(`Server started on port ${APP_PORT}`);
   } catch (error) {
