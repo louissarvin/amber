@@ -1,0 +1,121 @@
+[
+  {
+    "serviceName": "Memory Write",
+    "serviceType": "A2MCP",
+    "fee": "0.001",
+    "endpoint": "https://amber-mcp.xyz/mcp",
+    "serviceDescription": "Persistent memory write for AI agents. Stores structured context under your on-chain identity for later semantic recall. First 100 writes per identity are free.\nProvide: 1) your ERC-8004 identity address, 2) the memory text up to 8192 characters, 3) optional category and tags."
+  },
+  {
+    "serviceName": "Memory Recall",
+    "serviceType": "A2MCP",
+    "fee": "0.0005",
+    "endpoint": "https://amber-mcp.xyz/mcp",
+    "serviceDescription": "Semantic recall of your persistent memory. Returns the top ranked entries stored under your on-chain identity.\nProvide: 1) your ERC-8004 identity address, 2) a natural language query, 3) optional filters for category and time window."
+  },
+  {
+    "serviceName": "Memory Bulk",
+    "serviceType": "A2MCP",
+    "fee": "0",
+    "endpoint": "https://amber-mcp.xyz/mcp",
+    "serviceDescription": "Bulk memory writes for agents importing a batch of context in one call. Up to 50 memories per request.\nProvide: 1) your ERC-8004 identity address, 2) an array of memory entries with content and optional category or tags."
+  },
+  {
+    "serviceName": "Session Context",
+    "serviceType": "A2MCP",
+    "fee": "0.0002",
+    "endpoint": "https://amber-mcp.xyz/mcp",
+    "serviceDescription": "Fetches the most recent memories under your identity to bootstrap a new agent session with prior context.\nProvide: 1) your ERC-8004 identity address, 2) an optional limit up to 50 entries."
+  },
+  {
+    "serviceName": "Wallet Seed",
+    "serviceType": "A2MCP",
+    "fee": "0",
+    "endpoint": "https://amber-mcp.xyz/mcp",
+    "serviceDescription": "Seeds starter memories from public on-chain activity for an identity so recall starts with real context instead of an empty book.\nProvide: 1) your ERC-8004 identity address, 2) optional lookback depth in blocks."
+  },
+  {
+    "serviceName": "Seal Generate",
+    "serviceType": "A2MCP",
+    "fee": "0.05",
+    "endpoint": "https://amber-mcp.xyz/mcp",
+    "serviceDescription": "Creates a wax-sealed decree image for a proposal, milestone, or personal oath tied to your on-chain identity.\nProvide: 1) your ERC-8004 identity address, 2) a short subject line, 3) the decree body text, 4) optional sigil style amber, onyx, or cream."
+  },
+  {
+    "serviceName": "Memory Portrait",
+    "serviceType": "A2MCP",
+    "fee": "0",
+    "endpoint": "https://amber-mcp.xyz/mcp",
+    "serviceDescription": "Builds a visual constellation of memories for an on-chain identity as a living shareable artwork that updates as new memories are written.\nProvide: 1) your ERC-8004 identity address."
+  },
+  {
+    "serviceName": "Memory Share",
+    "serviceType": "A2MCP",
+    "fee": "0.001",
+    "endpoint": "https://amber-mcp.xyz/mcp",
+    "serviceDescription": "Copies selected memories from your identity to another identity so agents can share portable context without losing ownership provenance.\nProvide: 1) your ERC-8004 identity address, 2) the recipient identity address, 3) up to 20 memory ids to share."
+  },
+  {
+    "serviceName": "Memory Dossier",
+    "serviceType": "A2MCP",
+    "fee": "0.001",
+    "endpoint": "https://amber-mcp.xyz/mcp",
+    "serviceDescription": "Builds a compact dossier from your most recent memories so a new agent session can read who you are in one entry.\nProvide: 1) your ERC-8004 identity address, 2) optional entry limit between 5 and 40."
+  },
+  {
+    "serviceName": "Memory Analytics",
+    "serviceType": "A2MCP",
+    "fee": "0",
+    "endpoint": "https://amber-mcp.xyz/mcp",
+    "serviceDescription": "Returns per-identity analytics: category mix, seven-day write timeline, top tags, attestation coverage, and seal count for competition or ops review.\nProvide: 1) your ERC-8004 identity address."
+  },
+  {
+    "serviceName": "Memory Graph",
+    "serviceType": "A2MCP",
+    "fee": "0",
+    "endpoint": "https://amber-mcp.xyz/mcp",
+    "serviceDescription": "Returns a memory constellation graph as nodes and tag-overlap edges so agents can visualize relationships across recent memories.\nProvide: 1) your ERC-8004 identity address."
+  },
+  {
+    "serviceName": "Portfolio Snapshot",
+    "serviceType": "A2MCP",
+    "fee": "0",
+    "endpoint": "https://amber-mcp.xyz/mcp",
+    "serviceDescription": "Reads public X Layer wallet holdings via OKX portfolio data and stores a dated portfolio fact under your identity for later recall.\nProvide: 1) your ERC-8004 identity address."
+  },
+  {
+    "serviceName": "Finance Brief",
+    "serviceType": "A2MCP",
+    "fee": "0",
+    "endpoint": "https://amber-mcp.xyz/mcp",
+    "serviceDescription": "Finance copilot memory layer: seeds X Layer wallet history, stores a live portfolio snapshot, and returns semantic recall of your on-chain financial context in one call.\nProvide: 1) your ERC-8004 identity address."
+  },
+  {
+    "serviceName": "Demo Pack",
+    "serviceType": "A2MCP",
+    "fee": "0",
+    "endpoint": "https://amber-mcp.xyz/mcp",
+    "serviceDescription": "One-call bootstrap for a new identity: seed wallet facts, write a preference, build a dossier, sample recall, and return a portrait URL.\nProvide: 1) your ERC-8004 identity address, 2) optional preference text."
+  },
+  {
+    "serviceName": "Who Am I",
+    "serviceType": "A2MCP",
+    "fee": "0",
+    "endpoint": "https://amber-mcp.xyz/mcp",
+    "serviceDescription": "Returns preferences, facts, pinned memories, and a dossier snapshot so an agent can answer who you are in one call.\nProvide: 1) your ERC-8004 identity address."
+  },
+  {
+    "serviceName": "Memory Diff",
+    "serviceType": "A2MCP",
+    "fee": "0",
+    "endpoint": "https://amber-mcp.xyz/mcp",
+    "serviceDescription": "Lists memories written after a timestamp so a new session can see what changed since last boot.\nProvide: 1) your ERC-8004 identity address, 2) an ISO-8601 since timestamp."
+  },
+  {
+    "serviceName": "Lifestyle Memory",
+    "serviceType": "A2MCP",
+    "fee": "0",
+    "endpoint": "https://amber-mcp.xyz/mcp",
+    "serviceDescription": "Call lifestyle_remember to pin personal facts, preferences, and goals to your ERC-8004 identity so every agent session knows who you are from the first message.\nProvide: 1) your ERC-8004 identity address, 2) lifestyle text to remember."
+  }
+]
