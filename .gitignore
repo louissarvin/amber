@@ -1,5 +1,4 @@
-# This repository ships the AMBER backend service only.
-/web/
+# This repository ships the AMBER backend service and the web frontend.
 /memory/
 /.claude/
 node_modules/
@@ -8,7 +7,9 @@ node_modules/
 /*.md
 !/README.md
 
-# Assets and OS cruft
+# Assets and OS cruft (root/backend); web/ ships its own committed assets
 *.png
 *.svg
+!/web/**/*.png
+!/web/**/*.svg
 .DS_Store

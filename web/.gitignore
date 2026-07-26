@@ -1,0 +1,19 @@
+node_modules
+.DS_Store
+dist
+dist-ssr
+*.local
+count.txt
+.env
+.env.production
+.nitro
+.tanstack
+.wrangler
+.output
+.vinxi
+todos.json
+temp
+
+# Dev research screenshots (regenerable artifacts, ~13M); keep the teardown .md
+RESEARCH/screens/
+RESEARCH/build-verify/
