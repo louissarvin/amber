@@ -14,6 +14,10 @@ count.txt
 todos.json
 temp
 
-# Dev research screenshots (regenerable artifacts, ~13M); keep the teardown .md
-RESEARCH/screens/
-RESEARCH/build-verify/
+# Dev research artifacts (screenshots + teardown) are regenerable, not shipped
+RESEARCH/
+
+# Only README.md is committed among docs; ignore all other markdown, agent notes, and design docs
+*.md
+!README.md
+.claude/
