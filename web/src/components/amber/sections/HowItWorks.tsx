@@ -133,29 +133,225 @@ export default function HowItWorks() {
   )
 }
 
+function MemoryVisual() {
+  const rows = [
+    { label: 'Brand voice: senior engineer', tag: 'preference' },
+    { label: 'Deployed on X Layer 196', tag: 'fact' },
+    { label: 'Palette: amber on ink', tag: 'note' },
+  ]
+  return (
+    <div className="w-full space-y-2.5">
+      <div className="flex items-center gap-2">
+        <span className="rounded-full bg-surface-2 px-2.5 py-1 font-mono text-xs text-primary">
+          0xdead…beef
+        </span>
+        <span className="font-mono text-xs text-fg-faint">ERC-8004 identity</span>
+      </div>
+      {rows.map((r) => (
+        <div
+          key={r.label}
+          className="flex items-center gap-3 rounded-xl border border-line bg-surface/40 px-3 py-2.5"
+        >
+          <span className="size-1.5 shrink-0 rounded-full bg-primary" />
+          <span className="flex-1 truncate text-sm text-fg">{r.label}</span>
+          <span className="hidden font-mono text-[10px] tracking-wide text-fg-faint uppercase sm:inline">
+            {r.tag}
+          </span>
+          <div className="flex items-end gap-[2px]">
+            {[7, 12, 5, 14, 8, 11].map((h, j) => (
+              <span
+                key={j}
+                className="w-[3px] rounded-full bg-primary/45"
+                style={{ height: `${h}px` }}
+              />
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function ReputationVisual() {
+  const R = 60
+  const cx = 78
+  const cy = 78
+  const vals = [0.6, 0.42, 0.34, 0.92, 0.78, 0.5]
+  const labels = ['P', 'V', 'E', 'B', 'D', 'L']
+  const point = (i: number, r: number): [number, number] => {
+    const a = ((-90 + i * 60) * Math.PI) / 180
+    return [cx + Math.cos(a) * r, cy + Math.sin(a) * r]
+  }
+  const poly = (r: number) =>
+    Array.from({ length: 6 }, (_, i) => point(i, r))
+      .map(([x, y], i) => `${i ? 'L' : 'M'}${x.toFixed(1)},${y.toFixed(1)}`)
+      .join(' ') + ' Z'
+  const valPoly =
+    vals
+      .map((v, i) => {
+        const [x, y] = point(i, v * R)
+        return `${i ? 'L' : 'M'}${x.toFixed(1)},${y.toFixed(1)}`
+      })
+      .join(' ') + ' Z'
+  return (
+    <div className="flex w-full items-center justify-center gap-6">
+      <svg viewBox="0 0 156 156" className="size-36 shrink-0" aria-hidden="true">
+        {[R, R * 0.66, R * 0.33].map((r, i) => (
+          <path
+            key={i}
+            d={poly(r)}
+            fill="none"
+            stroke="var(--color-line)"
+            strokeOpacity={0.5 - i * 0.12}
+          />
+        ))}
+        {Array.from({ length: 6 }, (_, i) => {
+          const [x, y] = point(i, R)
+          return (
+            <line
+              key={i}
+              x1={cx}
+              y1={cy}
+              x2={x}
+              y2={y}
+              stroke="var(--color-line)"
+              strokeOpacity={0.35}
+            />
+          )
+        })}
+        <path
+          d={valPoly}
+          fill="var(--color-primary)"
+          fillOpacity={0.18}
+          stroke="var(--color-primary)"
+          strokeWidth={1.5}
+        />
+        {vals.map((v, i) => {
+          const [x, y] = point(i, v * R)
+          return <circle key={i} cx={x} cy={y} r={2.4} fill="var(--color-primary)" />
+        })}
+        {labels.map((l, i) => {
+          const [x, y] = point(i, R + 11)
+          return (
+            <text
+              key={l}
+              x={x}
+              y={y}
+              textAnchor="middle"
+              dominantBaseline="central"
+              fill="var(--color-fg-faint)"
+              fontSize={8}
+              fontFamily="ui-monospace, monospace"
+            >
+              {l}
+            </text>
+          )
+        })}
+      </svg>
+      <div>
+        <div className="font-mono text-5xl font-medium leading-none text-primary">
+          37
+        </div>
+        <div className="mt-1.5 font-mono text-xs text-fg-subtle">/ 100 · active</div>
+        <div className="mt-4 max-w-[9rem] font-mono text-[10px] leading-[1.5] text-fg-faint">
+          Six axes attested on X Layer. Yours, not the platform's.
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function DiscoveryVisual() {
+  const rows = [
+    { rank: 1, addr: '0xa71f…9c2e', score: 82, hot: true },
+    { rank: 2, addr: '0x4b09…1d77', score: 64, hot: false },
+    { rank: 3, addr: '0xde11…ee01', score: 41, hot: false },
+  ]
+  return (
+    <div className="w-full space-y-2.5">
+      {rows.map((r) => (
+        <div
+          key={r.rank}
+          className={cnm(
+            'flex items-center gap-3 rounded-xl border px-3 py-2.5',
+            r.hot
+              ? 'border-primary/40 bg-primary/10'
+              : 'border-line bg-surface/40',
+          )}
+        >
+          <span
+            className={cnm(
+              'w-6 font-mono text-xs',
+              r.hot ? 'text-primary' : 'text-fg-subtle',
+            )}
+          >
+            #{r.rank}
+          </span>
+          <span className="w-24 shrink-0 font-mono text-xs text-fg-muted">
+            {r.addr}
+          </span>
+          <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-surface-2">
+            <div
+              className={cnm(
+                'h-full rounded-full',
+                r.hot ? 'bg-primary' : 'bg-primary/40',
+              )}
+              style={{ width: `${r.score}%` }}
+            />
+          </div>
+          <span
+            className={cnm(
+              'w-6 text-right font-mono text-xs',
+              r.hot ? 'text-primary' : 'text-fg-subtle',
+            )}
+          >
+            {r.score}
+          </span>
+        </div>
+      ))}
+      <p className="pt-1 font-mono text-[10px] text-fg-faint">
+        Highest reputation surfaces first in the marketplace.
+      </p>
+    </div>
+  )
+}
+
+function StepVisual({ n }: { n: string }) {
+  if (n === '01') return <MemoryVisual />
+  if (n === '02') return <ReputationVisual />
+  return <DiscoveryVisual />
+}
+
 function StepPanel({ step }: { step: (typeof STEPS)[number] }) {
   const Icon = step.icon
   return (
-    <GlowCard glowCorner="top-right" className="h-full min-h-[280px] p-8">
-      <div className="flex h-full flex-col justify-between">
-        <div
-          className={cnm(
-            'flex size-12 items-center justify-center rounded-md',
-            'border border-line-strong bg-surface-2 text-primary',
-          )}
-        >
-          <Icon className="size-5" aria-hidden="true" />
+    <GlowCard glowCorner="top-right" className="h-full min-h-[320px] p-8">
+      <div className="flex h-full flex-col">
+        <div className="flex items-center justify-between">
+          <div
+            className={cnm(
+              'flex size-12 items-center justify-center rounded-md',
+              'border border-line-strong bg-surface-2 text-primary',
+            )}
+          >
+            <Icon className="size-5" aria-hidden="true" />
+          </div>
+          <p className="hidden font-mono text-xs tracking-[0.02em] text-fg-subtle md:block">
+            Step {step.n} / 0{STEPS.length}
+          </p>
         </div>
-        <div className="mt-8 md:hidden">
+
+        <div className="mt-8 flex flex-1 items-center">
+          <StepVisual n={step.n} />
+        </div>
+
+        <div className="mt-6 md:hidden">
           <span className="font-mono text-2xl text-primary">{step.n}</span>
           <p className="display-m mt-2 text-fg">{step.title}</p>
           <p className="mt-2 text-sm text-fg-muted leading-[1.6]">
             {step.detail}
           </p>
         </div>
-        <p className="hidden font-mono text-xs tracking-[0.02em] text-fg-subtle md:block">
-          Step {step.n} / 0{STEPS.length}
-        </p>
       </div>
     </GlowCard>
   )
