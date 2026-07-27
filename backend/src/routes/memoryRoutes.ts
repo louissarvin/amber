@@ -22,15 +22,12 @@ import {
   GetMemoryRequestSchema,
   ListMemoriesRequestSchema,
   QueryMemoryRequestSchema,
-  QueryMemoryQuerySchema,
   RelatedMemoryRequestSchema,
   RelatedMemoryBodySchema,
   SessionContextRequestSchema,
-  SessionContextQuerySchema,
   ShareMemoriesBodySchema,
   ShareMemoriesRequestSchema,
   WriteMemoryRequestSchema,
-  WriteMemoryBodySchema,
   DemoPackRequestSchema,
   WhoAmIRequestSchema,
   SessionDiffRequestSchema,
@@ -51,7 +48,6 @@ import {
   FREE_TIER_WRITES_PER_IDENTITY,
   PRICE_EXPORT_ATOMIC,
   PRICE_QUERY_ATOMIC,
-  PRICE_SESSION_CONTEXT_ATOMIC,
   PRICE_WRITE_ATOMIC,
   PUBLIC_BASE_URL,
   RATE_LIMIT_BULK_PER_MIN,
@@ -188,20 +184,12 @@ const handleWrite = async (request: FastifyRequest, reply: FastifyReply): Promis
     }
   }
 
-  // 2. Quota gate — free-tier bypasses x402.
+  // 2. Quota accounting. Payment is now enforced by the official OKX Payment SDK
+  //    (paymentMiddleware in index.ts) in a global onRequest hook BEFORE this
+  //    handler runs, so any request that reaches here has already paid. We still
+  //    read quota to record free-tier usage and drive writeOne's paymentMode.
   const quota = await getOrCreateQuota(identity.id);
   const isFree = hasFreeCapacity(quota);
-
-  if (!isFree) {
-    const paymentResult = await x402Exact(request, reply, {
-      priceAtomic: PRICE_WRITE_ATOMIC,
-      endpoint: '/memory/write',
-      identityInBody: body.identity,
-      method: 'POST',
-      inputSchema: WriteMemoryBodySchema,
-    });
-    if (paymentResult === 'reply-sent') return;
-  }
 
   // 3. Rate limit.
   const rate = await incrementRate(body.identity, '/memory/write');
@@ -263,26 +251,12 @@ const handleWrite = async (request: FastifyRequest, reply: FastifyReply): Promis
 };
 
 const handleQuery = async (request: FastifyRequest, reply: FastifyReply): Promise<FastifyReply | void> => {
+  // Payment is enforced by the official OKX Payment SDK (paymentMiddleware in
+  // index.ts) in a global onRequest hook BEFORE this handler runs — an unpaid
+  // request (including the OKX review harness's bodyless/paramless probe of any
+  // method) is answered with a standard 402 + PAYMENT-REQUIRED header and never
+  // reaches here. So we just validate input and, if valid, do the work.
   const parsed = QueryMemoryRequestSchema.safeParse(request.query);
-
-  // Payment gate runs BEFORE input validation so any unpaid request, including
-  // the bodyless or paramless probe (GET or POST) the OKX x402 review harness
-  // sends, receives a standard 402 challenge instead of a 400 or 404. A request
-  // carrying a valid payment is verified here first, then falls through to the
-  // input check below. Identity only matters for matching a present payer, so an
-  // unpaid probe passes the zero address, which never matches a real signer.
-  const paymentResult = await x402Exact(request, reply, {
-    priceAtomic: PRICE_QUERY_ATOMIC,
-    endpoint: '/memory/query',
-    identityInBody: parsed.success
-      ? parsed.data.identity
-      : '0x0000000000000000000000000000000000000000',
-    method: 'GET',
-    inputSchema: QueryMemoryQuerySchema,
-  });
-  if (paymentResult === 'reply-sent') return;
-
-  // Payment verified. Now require valid input for real processing.
   if (!parsed.success) return handleBadInput(reply, zodFlat(parsed.error));
   const q = parsed.data;
 
@@ -418,22 +392,10 @@ const handleSessionContext = async (
   request: FastifyRequest,
   reply: FastifyReply
 ): Promise<FastifyReply | void> => {
+  // Payment is enforced by the official OKX Payment SDK (index.ts) in a global
+  // onRequest hook before this handler runs (see handleQuery); an unpaid request
+  // never reaches here. Validate input, then do the work.
   const parsed = SessionContextRequestSchema.safeParse(request.query);
-
-  // Payment gate runs BEFORE input validation (see handleQuery): an unpaid probe
-  // of any method, with or without params, gets a standard 402, not a 400 or 404.
-  const paymentResult = await x402Exact(request, reply, {
-    priceAtomic: PRICE_SESSION_CONTEXT_ATOMIC,
-    endpoint: '/memory/session-context',
-    identityInBody: parsed.success
-      ? parsed.data.identity
-      : '0x0000000000000000000000000000000000000000',
-    method: 'GET',
-    inputSchema: SessionContextQuerySchema,
-  });
-  if (paymentResult === 'reply-sent') return;
-
-  // Payment verified. Now require valid input for real processing.
   if (!parsed.success) return handleBadInput(reply, zodFlat(parsed.error));
   const q = parsed.data;
 

@@ -7,7 +7,28 @@ import FastifyHelmet from '@fastify/helmet';
 import FastifyRateLimit from '@fastify/rate-limit';
 import FastifySwagger from '@fastify/swagger';
 import FastifySwaggerUi from '@fastify/swagger-ui';
-import { APP_PORT, IS_DEV, validateConfig } from './src/config/main-config.ts';
+
+// Official OKX Payment SDK (x402). This is now the SOLE payment gate on the
+// three paid memory routes (/memory/query, /memory/session-context,
+// /memory/write). OKX verifies official-SDK integration by observing the
+// verify/settle calls the OKXFacilitatorClient makes to its hosted facilitator.
+// NOTE: ExactEvmScheme is imported from `@okxweb3/x402-evm/exact/server` — the
+// SERVER-side, no-arg scheme implementing SchemeNetworkServer. The root
+// `@okxweb3/x402-evm` export is the CLIENT/buyer scheme (needs a signer) and is
+// NOT what x402ResourceServer.register() expects.
+import { paymentMiddleware, x402ResourceServer } from '@okxweb3/x402-fastify';
+import { ExactEvmScheme } from '@okxweb3/x402-evm/exact/server';
+import { OKXFacilitatorClient } from '@okxweb3/x402-core';
+
+import {
+  APP_PORT,
+  IS_DEV,
+  validateConfig,
+  OKX_API_KEY,
+  OKX_SECRET_KEY,
+  OKX_PASSPHRASE,
+  ASP_WALLET_ADDRESS,
+} from './src/config/main-config.ts';
 import { redis } from './src/lib/redis.ts';
 import { prismaQuery } from './src/lib/prisma.ts';
 
@@ -245,6 +266,78 @@ fastify.register(publicRoutes, { prefix: '/public' });
 
 // Live judge/buyer demo — one-URL end-to-end proof + per-vertical samples.
 fastify.register(demoRoutes, { prefix: '/demo' });
+
+// -----------------------------------------------------------------------------
+// Official OKX Payment SDK — x402 payment gate for the 3 paid memory routes.
+//
+// Mounted ONCE on the root instance. paymentMiddleware installs a GLOBAL
+// onRequest hook (verify payment → emit a standard 402 + PAYMENT-REQUIRED
+// header when unpaid) and an onSend hook (settle via the OKX facilitator after
+// a <400 handler response). Non-matching routes fall straight through, so /mcp,
+// free routes, attestation workers and /healthz are UNTOUCHED.
+//
+// Route keys are FULL paths (with the /memory prefix that memoryRoutes is
+// registered under) and VERB-LESS, so the payment hook fires for ANY method —
+// this is what makes a bodyless `curl -i -X POST /memory/query` and a paramless
+// GET both return the standard 402 the OKX review harness probes for.
+//
+// syncFacilitatorOnStart defaults to true: the SDK calls the facilitator's
+// getSupported() at boot to populate its supported-kinds map (required before it
+// can build a 402). This call goes to https://web3.okx.com and will fail from a
+// Cloudflare-WARP'd machine (403) — that is expected; the authoritative runtime
+// check happens on the VPS after deploy. Do NOT disable syncFacilitatorOnStart.
+const okxFacilitator = new OKXFacilitatorClient({
+  apiKey: OKX_API_KEY!,
+  secretKey: OKX_SECRET_KEY!,
+  passphrase: OKX_PASSPHRASE!,
+  // baseUrl defaults to https://web3.okx.com; syncSettle omitted (async settle).
+});
+
+const okxPaymentServer = new x402ResourceServer(okxFacilitator).register(
+  'eip155:196',
+  new ExactEvmScheme()
+);
+
+// price "$0.0005"/"$0.0002"/"$0.001" → amount 500/200/1000 atomic on USD₮0
+// (0x779ded…, decimals 6) with flat extra {name:"USD₮0",version:"1"} — the SDK's
+// getDefaultAsset("eip155:196") resolves these, byte-matching AMBER's existing
+// challenge and config PRICE_*_ATOMIC.
+paymentMiddleware(
+  fastify,
+  {
+    '/memory/query': {
+      accepts: {
+        scheme: 'exact',
+        network: 'eip155:196',
+        payTo: ASP_WALLET_ADDRESS,
+        price: '$0.0005',
+      },
+      description: 'Memory recall',
+      mimeType: 'application/json',
+    },
+    '/memory/session-context': {
+      accepts: {
+        scheme: 'exact',
+        network: 'eip155:196',
+        payTo: ASP_WALLET_ADDRESS,
+        price: '$0.0002',
+      },
+      description: 'Session context',
+      mimeType: 'application/json',
+    },
+    '/memory/write': {
+      accepts: {
+        scheme: 'exact',
+        network: 'eip155:196',
+        payTo: ASP_WALLET_ADDRESS,
+        price: '$0.001',
+      },
+      description: 'Memory write',
+      mimeType: 'application/json',
+    },
+  },
+  okxPaymentServer
+);
 
 // Live operations snapshot — uptime, process memory, DB counts, and pending
 // attestation queue depth. Read-only, best-effort. Safe to expose publicly
